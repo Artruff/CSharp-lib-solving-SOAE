@@ -16,13 +16,13 @@ namespace CSharp_lib_solving_SOAE
             get => _selecting;
         }
         public MainElementMethod(SelectingMainElement selecting) => _selecting = selecting;
-        public decimal[] SolveMatrix(decimal[][] argumentsMatrix, decimal[] valuesMatrix)
+        public float[] SolveMatrix(float[][] argumentsMatrix, float[] valuesMatrix)
         {
             if (argumentsMatrix.Length != valuesMatrix.Length && argumentsMatrix.Length != argumentsMatrix[0].Length)
                 throw new ArgumentException("Матрица аргументов и матрица значений разного размера.");
-            decimal[] result = new decimal[valuesMatrix.Length];
-            decimal[][] tmpMatrix = (decimal[][])argumentsMatrix.Clone();
-            decimal[] tmpValues = (decimal[])valuesMatrix.Clone();
+            float[] result = new float[valuesMatrix.Length];
+            float[][] tmpMatrix = (float[][])argumentsMatrix.Clone();
+            float[] tmpValues = (float[])valuesMatrix.Clone();
             int[] changingValues = new int[valuesMatrix.Length];
             for (int i = 0; i < valuesMatrix.Length; i++)
                 changingValues[i] = i;
@@ -33,7 +33,7 @@ namespace CSharp_lib_solving_SOAE
 
                 for(int j = i+1; j< argumentsMatrix.Length; j++)
                 {
-                    decimal modValue = tmpMatrix[j][i] / tmpMatrix[i][i];
+                    float modValue = tmpMatrix[j][i] / tmpMatrix[i][i];
                     for (int n = i; n < argumentsMatrix.Length; n++)
                     {
                         tmpMatrix[j][n] -= modValue *tmpMatrix[i][n];
@@ -46,7 +46,7 @@ namespace CSharp_lib_solving_SOAE
             {
                 for(int j = result.Length-1; j>i; j--)
                 {
-                    result[changingValues[i]] += result[j] * tmpMatrix[i][j];
+                    result[changingValues[i]] += result[changingValues[j]] * tmpMatrix[i][j];
                 }
 
                 result[changingValues[i]] = (tmpValues[i] - result[changingValues[i]])/tmpMatrix[i][i];
@@ -54,37 +54,59 @@ namespace CSharp_lib_solving_SOAE
 
             return result;
         }
-        private void SelectMainElement(int iteration, decimal[][] argumentsMatrix, decimal[] valuesMatrix, int[] matrixX)
+        private void SelectMainElement(int iteration, float[][] argumentsMatrix, float[] valuesMatrix, int[] matrixX)
         {
-            (int x, int y) mainElement = (iteration, iteration);
-            for (int i = iteration; i < argumentsMatrix.Length; i++)
+            float maxElement = argumentsMatrix[iteration][iteration];
+            (int x, int y) maxI = (iteration, iteration);
+            switch (_selecting)
             {
-                switch (selecting)
-                {
-                    case SelectingMainElement.Horizontal:
-                        if(Math.Abs(argumentsMatrix[i][iteration]) > Math.Abs(argumentsMatrix[mainElement.x][mainElement.y]))
+                case SelectingMainElement.Horizontal:
+                    for(int i = iteration+1; i<argumentsMatrix.Length; i++)
+                    {
+                        if (maxElement < Math.Abs(argumentsMatrix[iteration][i]))
                         {
-                            ChangeHorizontalElements<decimal>(valuesMatrix, iteration, i);
-                            ChangeHorizontalElements<decimal>(argumentsMatrix[i], i, iteration);
+                            maxElement = Math.Abs(argumentsMatrix[iteration][i]);
+                            maxI.y = i;
                         }
-                        break;
-                    case SelectingMainElement.Vertical:
-                        if (Math.Abs(argumentsMatrix[iteration][i]) > Math.Abs(argumentsMatrix[mainElement.x][mainElement.y]))
+                    }
+                    break;
+                case SelectingMainElement.Vertical:
+                    for (int i = iteration + 1; i < argumentsMatrix.Length; i++)
+                    {
+                        if (maxElement < Math.Abs(argumentsMatrix[i][iteration]))
                         {
-                            ChangeVerticalElements<decimal>(argumentsMatrix, iteration, i, iteration);
-                            ChangeHorizontalElements<int>(matrixX, i, iteration);
+                            maxElement = Math.Abs(argumentsMatrix[i][iteration]);
+                            maxI.x = i;
                         }
-                        break;
-                    case SelectingMainElement.HorizontalAndVertical:
+                    }
+                    break;
+                case SelectingMainElement.HorizontalAndVertical:
+                    for (int i = iteration; i < argumentsMatrix.Length; i++)
+                    {
                         for (int j = iteration; j < argumentsMatrix.Length; j++)
-                            if (Math.Abs(argumentsMatrix[i][j]) > Math.Abs(argumentsMatrix[mainElement.x][mainElement.y]))
+                        {
+                            if (maxElement < Math.Abs(argumentsMatrix[i][j]))
                             {
-                                ChangeHorizontalElements<decimal>(valuesMatrix, j, i);
-                                ChangeHorizontalElements<decimal>(argumentsMatrix[i], i, j);
-                                ChangeVerticalElements<decimal>(argumentsMatrix, j, i, j);
-                                ChangeHorizontalElements<int>(matrixX, i, j);
+                                maxElement = Math.Abs(argumentsMatrix[i][j]);
+                                maxI.x = i;
+                                maxI.y = j;
                             }
-                        break;
+                        }
+                    }
+                    break;
+            }
+            if(maxI != (iteration, iteration))
+            {
+                if(maxI.y!= iteration)
+                {
+                    for (int i = 0; i < argumentsMatrix.Length; i++)
+                        ChangeHorizontalElements<float>(argumentsMatrix[i], iteration, maxI.y);
+                    ChangeHorizontalElements<int>(matrixX, iteration, maxI.y);
+                }
+                if (maxI.x != iteration)
+                {
+                    ChangeVerticalElements<float>(argumentsMatrix, iteration, maxI.x);
+                    ChangeHorizontalElements<float>(valuesMatrix, iteration, maxI.x);
                 }
             }
         }
@@ -94,11 +116,15 @@ namespace CSharp_lib_solving_SOAE
             array[x1] = array[x2];
             array[x2] = place;
         }
-        private void ChangeVerticalElements<T>(T[][] array,int column, int y1, int y2)
+        private void ChangeVerticalElements<T>(T[][] array, int y1, int y2)
         {
-            T place = array[y1][column];
-            array[y1][column] = array[y2][column];
-            array[y2][column] = place;
+            for(int j = 0; j<array.Length; j++)
+            {
+
+                T place = array[y1][j];
+                array[y1][j] = array[y2][j];
+                array[y2][j] = place;
+            }
         }
     }
 }
