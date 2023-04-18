@@ -8,14 +8,14 @@ namespace CSharp_lib_solving_SOAE
         Vertical,
         HorizontalAndVertical
     }
-    public class MainElementMethod
+    public class MainElementMethod : ISolverMatrix
     {
         SelectingMainElement _selecting;
         SelectingMainElement selecting
         {
             get => _selecting;
         }
-        public MainElementMethod(SelectingMainElement selecting) => _selecting = selecting;
+        public MainElementMethod(SelectingMainElement selecting = SelectingMainElement.HorizontalAndVertical) => _selecting = selecting;
         public float[] SolveMatrix(float[][] argumentsMatrix, float[] valuesMatrix)
         {
             if (argumentsMatrix.Length != valuesMatrix.Length && argumentsMatrix.Length != argumentsMatrix[0].Length)
